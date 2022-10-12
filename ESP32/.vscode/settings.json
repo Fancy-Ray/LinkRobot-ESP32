@@ -27,7 +27,9 @@
         "uart.h": "c",
         "encoder.h": "c",
         "complex": "c",
-        "interruptserviceroutines.h": "c"
+        "interruptserviceroutines.h": "c",
+        "bitset": "c",
+        "set": "c"
     },
     "idf.flashType": "UART"
 }

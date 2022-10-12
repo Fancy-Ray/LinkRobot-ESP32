@@ -1,6 +1,10 @@
 #include "main.h"
-int i=0;
-quardratureSturct motor0;
+int set=0;
+float out;
+float a,b;
+float p=0.2;
+float p2=0.2;
+quadratureSturct motor0;
 
 // static void IRAM_ATTR gpio_isr_handler(void* arg)
 // {
@@ -21,9 +25,13 @@ quardratureSturct motor0;
 
 void app_main(void)
 {
-motor0.raw_value=10;
-isr_init(GPIO_NUM_23,GPIO_NUM_22);
-// a();
+    motor0.rawAngleLast=0;
+    motor0.rawAngle=0;
+    motor0.rawSpeed=0;
+    motor0.numberOfTurns=0;
+    motor0.angle=0;
+    isr_init(GPIO_NUM_23,GPIO_NUM_22);
+    // a();
 
 //中断
     // gpio_set_direction(4, GPIO_MODE_INPUT);
@@ -40,17 +48,18 @@ isr_init(GPIO_NUM_23,GPIO_NUM_22);
     // gpio_intr_enable(4);
 
  //PWM
-    gpio_set_direction(GPIO_NUM_2, GPIO_MODE_OUTPUT);
+    gpio_set_direction(GPIO_NUM_2, GPIO_MODE_INPUT_OUTPUT);
     mcpwm_gpio_init(MCPWM_UNIT_0, MCPWM0A, 2);
+    gpio_set_direction(GPIO_NUM_15, GPIO_MODE_INPUT_OUTPUT);
+    mcpwm_gpio_init(MCPWM_UNIT_0, MCPWM0B, 15);
     mcpwm_config_t pwm_config={
-        .frequency=1000,
-        .cmpr_a=50,
+        .frequency=10,
+        .cmpr_a=0,
         .duty_mode=MCPWM_DUTY_MODE_0,
         .counter_mode=MCPWM_UP_COUNTER,
     };
     mcpwm_init(MCPWM_UNIT_0,MCPWM_TIMER_0,&pwm_config);
     mcpwm_start(MCPWM_UNIT_0,MCPWM_TIMER_0);
-
 //UART
     // //配置结构体
     // uart_config_t uart_config = {
@@ -68,21 +77,7 @@ isr_init(GPIO_NUM_23,GPIO_NUM_22);
     // uart_param_config(UART_NUM_0, &uart_config);
     
 //时钟
-    /* Select and initialize basic parameters of the timer */
-    // timer_config_t config = {
-    //     .divider = 16,
-    //     .counter_dir = TIMER_COUNT_UP,
-    //     .counter_en = TIMER_PAUSE,
-    //     .alarm_en = TIMER_ALARM_DIS,
-    //     .auto_reload = false,
-    // }; // default clock source is APB
-    // timer_init(TIMER_GROUP_0, TIMER_0, &config);
-    /* Timer's counter will initially start from value below.
-       Also, if auto_reload is set, this value will be automatically reload on alarm */
-    // timer_set_counter_value(TIMER_GROUP_0, TIMER_0, 0);
-    // /* Configure the alarm value and the interrupt on alarm. */
-    // timer_set_alarm_value(TIMER_GROUP_0, TIMER_0, 3 * TIMER_BASE_CLK / 16);
-    // timer_start(TIMER_GROUP_0, TIMER_0);
+
     while (1)
     {
         // printf("12");
@@ -99,16 +94,39 @@ isr_init(GPIO_NUM_23,GPIO_NUM_22);
         // }
         // vTaskDelay(10);
         // printf("%d\n",i);
-        usleep(10000);
-        printf("%d\n",motor0.raw_value);
+        usleep(100000);
+        // printf("%d\n",gpio_get_level(2));
         // printf("%d:%d:%d:%d\n",motor0.Alast,motor0.Blast,motor0.A,motor0.B);
+        printf("%d:%d:%d\n",motor0.rawSpeed,motor0.rawAngle,motor0.angle);
+        printf("%f\n",out);
+
+
+
+        // gpio_set_level(2,0);
+        // usleep(1000000);
+        // gpio_set_level(2,1);
+        // usleep(1000000);
+        
+        set=0;
+        out=(float)((float)(set-motor0.angle)*p-motor0.rawSpeed)*p2;
+        if(out<0)a=0;
+        else a=out;
+        if(out>0)b=0;
+        else b=-out;
+        mcpwm_set_duty(MCPWM_UNIT_0,MCPWM_TIMER_0,MCPWM_GEN_A,a);//PWM
+        mcpwm_set_duty(MCPWM_UNIT_0,MCPWM_TIMER_0,MCPWM_GEN_B,b);//PWM
+
+        uint64_t task_counter_value;
+        timer_get_counter_value(TIMER_GROUP_0, TIMER_0, &task_counter_value);
+        printf("Counter: %d\r\n",(uint32_t)(task_counter_value));
+        // if((uint32_t)(task_counter_value)>50000000&&(uint32_t)(task_counter_value)<60000000){
+        //     // timer_pause(TIMER_GROUP_0, TIMER_0);
         // gpio_set_level(2,0);
         // usleep(100000);
         // gpio_set_level(2,1);
-        mcpwm_set_duty(MCPWM_UNIT_0,MCPWM_TIMER_0,MCPWM_GEN_A,i);
-        // uint64_t task_counter_value;
-        // timer_get_counter_value(TIMER_GROUP_0, TIMER_0, &task_counter_value);
-        // printf("Counter: %d\r\n",(uint32_t)(task_counter_value));
+        // usleep(100000);
+        // timer_set_alarm(TIMER_GROUP_0, TIMER_0,TIMER_ALARM_EN);
+        // }
         
     }
 }
