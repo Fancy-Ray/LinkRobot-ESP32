@@ -25,6 +25,8 @@ quadratureSturct motor0;
 
 void app_main(void)
 {
+    wifi_init();
+
     motor0.rawAngleLast=0;
     motor0.rawAngle=0;
     motor0.rawSpeed=0;
@@ -92,9 +94,8 @@ void app_main(void)
         //     if(i==0)
         //         j=0;
         // }
-        // vTaskDelay(10);
+         vTaskDelay(10);
         // printf("%d\n",i);
-        usleep(100000);
         // printf("%d\n",gpio_get_level(2));
         // printf("%d:%d:%d:%d\n",motor0.Alast,motor0.Blast,motor0.A,motor0.B);
         printf("%d:%d:%d\n",motor0.rawSpeed,motor0.rawAngle,motor0.angle);
